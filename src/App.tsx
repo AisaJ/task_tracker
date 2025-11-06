@@ -1,8 +1,8 @@
-import React, { useEffect, useReducer, useState, useMemo } from "react";
+import React, { useEffect, useReducer, useState, } from "react";
 import TaskForm from "./components/TaskForm";
 import TaskList from "./components/TaskList";
 import type { Task, Action } from "./types";
-import { TextField, Button, Typography, FormControl, InputLabel, MenuItem,Select } from "@mui/material";
+import { Button, Typography, FormControl, InputLabel, MenuItem,Select } from "@mui/material";
 
 
 const reducer = (state: Task[], action: Action): Task[] => {
@@ -31,6 +31,19 @@ const App: React.FC = () => {
   const [darkMode, setDarkMode] = useState<boolean>(false);
   const [sortOrder, setSortOrder] = useState<"none" | "asc" | "desc">("none");
 
+  useEffect(() => {
+    const savedTasks = localStorage.getItem("tasks");
+    if (savedTasks) {
+      try {
+        const parsed = JSON.parse(savedTasks);
+        if (Array.isArray(parsed)) {
+          dispatch({ type: "LOAD_TASKS", tasks: parsed });
+        }
+      } catch (err) {
+        console.error("Error loading saved tasks:", err);
+      }
+    }
+  }, []);
 
   // Load tasks from localStorage
   useEffect(() => {
@@ -47,6 +60,9 @@ const App: React.FC = () => {
     localStorage.setItem("theme", darkMode ? "dark" : "light");
     
   }, [tasks, darkMode]);
+  
+  
+
   // Filter logic
   const filteredTasks = tasks.filter((task) => {
     if (filter === "active") return !task.completed;
@@ -66,6 +82,13 @@ const App: React.FC = () => {
 
     return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
   });
+
+  //Sort list menu
+  const sortOptions = [
+    { value: "none", label: "No sort" },
+    { value: "asc", label: "Earliest due" },
+    { value: "desc", label: "Latest due" },
+  ];
 
   return (
     <div className={`${darkMode ? "dark" : ""}`}>
@@ -105,16 +128,20 @@ const App: React.FC = () => {
                 </Button>
               ))}
               <FormControl size="small" >
-                <InputLabel>Sort</InputLabel>
+                <InputLabel sx={{ fontSize: "0.875rem" }}>Sort</InputLabel>
                 <Select
                   value={sortOrder}
                   label="Sort"
                   onChange={(e) => setSortOrder(e.target.value as "none" | "asc" | "desc")}
-                  sx={{ minWidth: 150 }}
+                  sx={{ minWidth: 140, fontSize: "0.775rem" }}
                 >
-                  <MenuItem value="none">No sort</MenuItem>
-                  <MenuItem value="asc">Earliest due</MenuItem>
-                  <MenuItem value="desc">Latest due</MenuItem>
+                {sortOptions.map((option) => (
+                   
+                  <MenuItem key={option.value} value={option.value} sx={{fontSize:"0.775rem"}}>
+                    {option.label}
+                  </MenuItem> )
+                )}
+                
                 </Select>
               </FormControl>
             

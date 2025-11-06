@@ -13,7 +13,7 @@ interface TaskItemProps {
 const TaskItem: React.FC<TaskItemProps> = ({ task, toggleTask, deleteTask }) => {
     const isOverdue = task.dueDate && !task.completed && dayjs(task.dueDate).isBefore(dayjs(), "day");
   return (
-    <div className="flex justify-between items-center bg-white p-2 mb-2 rounded-md shadow-sm border">
+    <div className="flex justify-between items-center bg-white p-2 mb-2 rounded-md shadow-sm border border-gray-200 dark:bg-gray-400 dark:border-gray-200">
         <div className="flex items-center gap-2">
             <input
             type="checkbox"
