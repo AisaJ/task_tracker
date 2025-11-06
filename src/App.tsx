@@ -1,0 +1,135 @@
+import React, { useEffect, useReducer, useState, useMemo } from "react";
+import TaskForm from "./components/TaskForm";
+import TaskList from "./components/TaskList";
+import type { Task, Action } from "./types";
+import { TextField, Button, Typography, FormControl, InputLabel, MenuItem,Select } from "@mui/material";
+
+
+const reducer = (state: Task[], action: Action): Task[] => {
+  switch (action.type) {
+    case "ADD_TASK":
+          return [
+            ...state,
+            { id: Date.now(), title: action.title, completed: false, dueDate: action.dueDate || "" },
+          ];
+    case "TOGGLE_TASK":
+      return state.map((t) =>
+        t.id === action.id ? { ...t, completed: !t.completed } : t
+      );
+    case "DELETE_TASK":
+      return state.filter((t) => t.id !== action.id);
+    case "LOAD_TASKS":
+      return action.tasks;
+    default:
+      return state;
+  }
+};
+
+const App: React.FC = () => {
+  const [tasks, dispatch] = useReducer(reducer, []);
+  const [filter, setFilter] = useState<"all" | "active" | "completed">("all");
+  const [darkMode, setDarkMode] = useState<boolean>(false);
+  const [sortOrder, setSortOrder] = useState<"none" | "asc" | "desc">("none");
+
+
+  // Load tasks from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem("tasks");
+    if (saved) dispatch({ type: "LOAD_TASKS", tasks: JSON.parse(saved) });
+
+    const theme = localStorage.getItem("theme");
+    if (theme === "dark") setDarkMode(true);
+  }, []);
+
+  // Save tasks & theme to localStorage
+  useEffect(() => {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+    localStorage.setItem("theme", darkMode ? "dark" : "light");
+    
+  }, [tasks, darkMode]);
+  // Filter logic
+  const filteredTasks = tasks.filter((task) => {
+    if (filter === "active") return !task.completed;
+    if (filter === "completed") return task.completed;
+    return true;
+  });
+
+  // Sort logic
+  const sortedTasks = [...filteredTasks].sort((a, b) => {
+    if (sortOrder === "none") return 0; // no sorting
+    if (!a.dueDate && !b.dueDate) return 0;
+    if (!a.dueDate) return 1; // move tasks without date to bottom
+    if (!b.dueDate) return -1;
+
+    const dateA = new Date(a.dueDate).getTime();
+    const dateB = new Date(b.dueDate).getTime();
+
+    return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
+  });
+
+  return (
+    <div className={`${darkMode ? "dark" : ""}`}>
+      <div className="min-h-screen flex flex-col items-center p-6 bg-gray-100 dark:bg-gray-900 transition-colors duration-300 text-sm sm:text-base md:text-lg lg:text-xl leading-relaxed max-w-full">
+        <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl shadow-md p-5">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <Typography variant="h5" className="text-3xl font-bold text-amber-600 dark:text-amber-800">📝 </Typography>
+            </div>
+            <Typography variant="h5" className="text-xl text-amber-700 dark:text-amber-200">Task Tracker Dashboard</Typography>
+
+            {/* <button
+              onClick={() => setDarkMode(!darkMode)}
+              className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-3 py-1 rounded-md hover:opacity-80"
+            >
+              {darkMode ? "☀️ Light" : "🌙 Dark"}
+            </button> */}
+          </div>
+
+          {/* Task Form */}
+          <TaskForm addTask={(title, dueDate) => dispatch({ type: "ADD_TASK", title, dueDate })}/>
+
+          {/* Filter Buttons */}
+          <div className="flex justify-end gap-3 mb-4">
+                      
+              {["all", "active", "completed"].map((f) => (
+                <Button
+                  key={f}
+                  size="small"
+                  variant={filter === f ? "contained" : "outlined"}
+                  color={f === "active" ? "warning" : f === "completed" ? "success" : "primary"}
+                  onClick={() => setFilter(f as "all" | "active" | "completed")}
+                  sx={{ textTransform: "capitalize", px: 2 }}
+                >
+                  {f[0].toUpperCase() + f.slice(1)}
+                </Button>
+              ))}
+              <FormControl size="small" >
+                <InputLabel>Sort</InputLabel>
+                <Select
+                  value={sortOrder}
+                  label="Sort"
+                  onChange={(e) => setSortOrder(e.target.value as "none" | "asc" | "desc")}
+                  sx={{ minWidth: 150 }}
+                >
+                  <MenuItem value="none">No sort</MenuItem>
+                  <MenuItem value="asc">Earliest due</MenuItem>
+                  <MenuItem value="desc">Latest due</MenuItem>
+                </Select>
+              </FormControl>
+            
+          </div>
+
+          {/* Task List */}
+          <TaskList
+            tasks={sortedTasks}
+            toggleTask={(id) => dispatch({ type: "TOGGLE_TASK", id })}
+            deleteTask={(id) => dispatch({ type: "DELETE_TASK", id })}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default App;
