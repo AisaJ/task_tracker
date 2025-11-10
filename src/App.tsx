@@ -2,7 +2,7 @@ import React, { useEffect, useReducer, useState, } from "react";
 import TaskForm from "./components/TaskForm";
 import TaskList from "./components/TaskList";
 import type { Task, Action } from "./types";
-import { Button, Typography, FormControl, InputLabel, MenuItem,Select } from "@mui/material";
+import { Button, Typography, FormControl, InputLabel, MenuItem,Select, Box, LinearProgress } from "@mui/material";
 
 
 const reducer = (state: Task[], action: Action): Task[] => {
@@ -89,6 +89,31 @@ const App: React.FC = () => {
     { value: "asc", label: "Earliest due" },
     { value: "desc", label: "Latest due" },
   ];
+  //Progress bar calculation
+  const totalTasks = tasks.length;
+  const completedTasks = tasks.filter((task) => task.completed).length;
+  const progress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+  const [animatedProgress, setAnimatedProgress] = useState(0);
+
+  useEffect(() => {
+    const duration = 400; // milliseconds
+    const frameRate = 20; // frames per second
+    const totalFrames = (duration / 1000) * frameRate;
+    let frame = 0;
+
+    const start = animatedProgress;
+    const delta = progress - start;
+
+    const interval = setInterval(() => {
+      frame++;
+      const easeInOut = 0.5 - Math.cos((frame / totalFrames) * Math.PI) / 2;
+      setAnimatedProgress(start + delta * easeInOut);
+      if (frame >= totalFrames) clearInterval(interval);
+    }, 1000 / frameRate);
+
+    return () => clearInterval(interval);
+  }, [progress]);
+
 
   return (
     <div className={`${darkMode ? "dark" : ""}`}>
@@ -146,6 +171,52 @@ const App: React.FC = () => {
               </FormControl>
             
           </div>
+          
+          {/* Progress Bar */}
+          <Box sx={{ width: "100%", mb: 3 }}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 0.5,
+              }}>
+              <Typography variant="body2" color="text.secondary">
+                {completedTasks} of {totalTasks} tasks completed
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {Math.round(animatedProgress)}%
+              </Typography>
+            </Box>
+
+            <LinearProgress
+              variant="determinate"
+              value={animatedProgress}
+              sx={{
+                height: 8,
+                borderRadius: 4,
+                backgroundColor: "#e0e0e0",
+                "& .MuiLinearProgress-bar": {
+                  backgroundColor:
+                    animatedProgress < 40
+                      ? "#ef4444" // red
+                      : animatedProgress < 80
+                      ? "#facc15" // yellow
+                      : "#22c55e", // green
+                  transition: "all 0.3s ease",
+                },
+              }}
+            />
+          </Box>
+          {progress === 100 && (
+            <Typography
+              variant="body2"
+              color="success.main"
+              sx={{ mt: 1, textAlign: "center", fontWeight: 500 }}
+            >
+              🎉 All tasks completed!
+            </Typography>
+          )}
 
           {/* Task List */}
           <TaskList
