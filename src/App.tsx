@@ -3,6 +3,8 @@ import TaskForm from "./components/TaskForm";
 import TaskList from "./components/TaskList";
 import type { Task, Action } from "./types";
 import { Button, Typography, FormControl, InputLabel, MenuItem,Select, Box, LinearProgress } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import LogoutButton from "./components/LogoutButton";
 
 
 const reducer = (state: Task[], action: Action): Task[] => {
@@ -30,7 +32,7 @@ const App: React.FC = () => {
   const [filter, setFilter] = useState<"all" | "active" | "completed">("all");
   const [darkMode, setDarkMode] = useState<boolean>(false);
   const [sortOrder, setSortOrder] = useState<"none" | "asc" | "desc">("none");
-
+  const navigate = useNavigate();
   useEffect(() => {
     const savedTasks = localStorage.getItem("tasks");
     if (savedTasks) {
@@ -118,6 +120,10 @@ const App: React.FC = () => {
   return (
     <div className={`${darkMode ? "dark" : ""}`}>
       <div className="min-h-screen flex flex-col items-center p-6 bg-gray-100 dark:bg-gray-900 transition-colors duration-300 text-sm sm:text-base md:text-lg lg:text-xl leading-relaxed max-w-full">
+        <div style={{ padding: "2rem" }}>
+          <LogoutButton />
+          
+        </div>
         <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl shadow-md p-5">
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
