@@ -7,14 +7,15 @@ import { getAuth, setPersistence,  browserLocalPersistence  } from "firebase/aut
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+
 const firebaseConfig = {
-  apiKey: "AIzaSyDSUVBkJ0Vsu4-8YrEAwVxXyss-uQ3poQQ",
-  authDomain: "task-tracker-app-8d88b.firebaseapp.com",
-  projectId: "task-tracker-app-8d88b",
-  storageBucket: "task-tracker-app-8d88b.firebasestorage.app",
-  messagingSenderId: "307420230035",
-  appId: "1:307420230035:web:fbdd9316ba22ac033e3866",
-  measurementId: "G-WDVYXTQQFJ"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId:import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase
