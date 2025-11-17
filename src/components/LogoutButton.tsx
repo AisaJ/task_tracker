@@ -1,7 +1,7 @@
 import React from "react";
 import { Button, Box, Typography } from "@mui/material";
 import { signOut } from "firebase/auth";
-import { auth } from "../firebaseConfig";
+import { auth } from "../firebase/firebaseConfig";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 

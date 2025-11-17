@@ -6,7 +6,7 @@ import TaskItem from "./TaskItem";
 interface TaskListProps {
   tasks: Task[];
   toggleTask: (id: number) => void;
-  deleteTask: (id: number) => void;
+  deleteTask: (id: string) => void;
 }
 
 const TaskList: React.FC<TaskListProps> = ({ tasks, toggleTask, deleteTask }) => {
@@ -18,14 +18,14 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, toggleTask, deleteTask }) =>
   }
 
   return (
-    <div>
+    <div className="max-h-90 overflow-y-auto">
       {tasks.map((task) => (
-        <TaskItem
-          key={task.id}
-          task={task}
-          toggleTask={toggleTask}
-          deleteTask={deleteTask}
-        />
+      <TaskItem
+        key={task.id}
+        task={task}
+        toggleTask={toggleTask}
+        deleteTask={deleteTask}
+      />
       ))}
     </div>
   );

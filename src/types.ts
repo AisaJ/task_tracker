@@ -1,8 +1,8 @@
 export interface Task {
   id: number;
-  title: string;
+  task: string;
   completed: boolean;
-  dueDate?: string; //
+  date?: string; //
 }
 
 export type Action =

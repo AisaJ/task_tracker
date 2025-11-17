@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { TextField, Button, Card, CardContent, Typography, Box } from "@mui/material";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../firebaseConfig";
+import { auth } from "../firebase/firebaseConfig";
 import { useNavigate } from "react-router-dom";
 
 const Login: React.FC = () => {

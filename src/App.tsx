@@ -5,6 +5,9 @@ import type { Task, Action } from "./types";
 import { Button, Typography, FormControl, InputLabel, MenuItem,Select, Box, LinearProgress } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import LogoutButton from "./components/LogoutButton";
+import { db } from "./firebase/firebaseConfig";
+import { collection, getDocs } from "firebase/firestore";
+import { getTasks, updateTask, deleteTask } from "./firebase/taskQueries";
 
 
 const reducer = (state: Task[], action: Action): Task[] => {
@@ -12,7 +15,7 @@ const reducer = (state: Task[], action: Action): Task[] => {
     case "ADD_TASK":
           return [
             ...state,
-            { id: Date.now(), title: action.title, completed: false, dueDate: action.dueDate || "" },
+            { id: Date.now(), task: action.title, completed: false, date: action.dueDate || "" },
           ];
     case "TOGGLE_TASK":
       return state.map((t) =>
@@ -27,42 +30,37 @@ const reducer = (state: Task[], action: Action): Task[] => {
   }
 };
 
+
+
 const App: React.FC = () => {
-  const [tasks, dispatch] = useReducer(reducer, []);
+  // const [tasks, dispatch] = useReducer(reducer, []);
   const [filter, setFilter] = useState<"all" | "active" | "completed">("all");
   const [darkMode, setDarkMode] = useState<boolean>(false);
   const [sortOrder, setSortOrder] = useState<"none" | "asc" | "desc">("none");
   const navigate = useNavigate();
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>("");
+  const[tasks, setTasks] = useState<any[]>([]);
+
+
   useEffect(() => {
-    const savedTasks = localStorage.getItem("tasks");
-    if (savedTasks) {
-      try {
-        const parsed = JSON.parse(savedTasks);
-        if (Array.isArray(parsed)) {
-          dispatch({ type: "LOAD_TASKS", tasks: parsed });
-        }
-      } catch (err) {
-        console.error("Error loading saved tasks:", err);
-      }
-    }
+    loadTasks();
   }, []);
 
-  // Load tasks from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem("tasks");
-    if (saved) dispatch({ type: "LOAD_TASKS", tasks: JSON.parse(saved) });
+  const loadTasks = async () => {
+    const data = await getTasks();
+    setTasks(data);
+  };
 
-    const theme = localStorage.getItem("theme");
-    if (theme === "dark") setDarkMode(true);
-  }, []);
+  const toggleComplete = async (task: any) => {
+    await updateTask(task.id, { completed: !task.completed });
+    loadTasks();
+  };
 
-  // Save tasks & theme to localStorage
-  useEffect(() => {
-    localStorage.setItem("tasks", JSON.stringify(tasks));
-    localStorage.setItem("theme", darkMode ? "dark" : "light");
-    
-  }, [tasks, darkMode]);
-  
+  const handleDelete = async (id: string) => {
+    await deleteTask(id);
+    loadTasks();
+  };
   
 
   // Filter logic
@@ -75,12 +73,12 @@ const App: React.FC = () => {
   // Sort logic
   const sortedTasks = [...filteredTasks].sort((a, b) => {
     if (sortOrder === "none") return 0; // no sorting
-    if (!a.dueDate && !b.dueDate) return 0;
-    if (!a.dueDate) return 1; // move tasks without date to bottom
-    if (!b.dueDate) return -1;
+    if (!a.date && !b.date) return 0;
+    if (!a.date) return 1; // move tasks without date to bottom
+    if (!b.date) return -1;
 
-    const dateA = new Date(a.dueDate).getTime();
-    const dateB = new Date(b.dueDate).getTime();
+    const dateA = new Date(a.date).getTime();
+    const dateB = new Date(b.date).getTime();
 
     return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
   });
@@ -124,7 +122,7 @@ const App: React.FC = () => {
           <LogoutButton />
           
         </div>
-        <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl shadow-md p-5">
+        <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl shadow-md p-5" >
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
             <div>
@@ -141,39 +139,39 @@ const App: React.FC = () => {
           </div>
 
           {/* Task Form */}
-          <TaskForm addTask={(title, dueDate) => dispatch({ type: "ADD_TASK", title, dueDate })}/>
+          <TaskForm />
 
           {/* Filter Buttons */}
           <div className="flex justify-end gap-3 mb-4">
-                      
+                
               {["all", "active", "completed"].map((f) => (
-                <Button
-                  key={f}
-                  size="small"
-                  variant={filter === f ? "contained" : "outlined"}
-                  color={f === "active" ? "warning" : f === "completed" ? "success" : "primary"}
-                  onClick={() => setFilter(f as "all" | "active" | "completed")}
-                  sx={{ textTransform: "capitalize", px: 2 }}
-                >
-                  {f[0].toUpperCase() + f.slice(1)}
-                </Button>
+          <Button
+            key={f}
+            size="small"
+            variant={filter === f ? "contained" : "outlined"}
+            color={f === "active" ? "warning" : f === "completed" ? "success" : "primary"}
+            onClick={() => setFilter(f as "all" | "active" | "completed")}
+            sx={{ textTransform: "capitalize", px: 2 }}
+          >
+            {f[0].toUpperCase() + f.slice(1)}
+          </Button>
               ))}
               <FormControl size="small" >
-                <InputLabel sx={{ fontSize: "0.875rem" }}>Sort</InputLabel>
-                <Select
-                  value={sortOrder}
-                  label="Sort"
-                  onChange={(e) => setSortOrder(e.target.value as "none" | "asc" | "desc")}
-                  sx={{ minWidth: 140, fontSize: "0.775rem" }}
-                >
-                {sortOptions.map((option) => (
-                   
-                  <MenuItem key={option.value} value={option.value} sx={{fontSize:"0.775rem"}}>
-                    {option.label}
-                  </MenuItem> )
-                )}
-                
-                </Select>
+          <InputLabel sx={{ fontSize: "0.875rem" }}>Sort</InputLabel>
+          <Select
+            value={sortOrder}
+            label="Sort"
+            onChange={(e) => setSortOrder(e.target.value as "none" | "asc" | "desc")}
+            sx={{ minWidth: 140, fontSize: "0.775rem" }}
+          >
+          {sortOptions.map((option) => (
+             
+            <MenuItem key={option.value} value={option.value} sx={{fontSize:"0.775rem"}}>
+              {option.label}
+            </MenuItem> )
+          )}
+          
+          </Select>
               </FormControl>
             
           </div>
@@ -182,16 +180,16 @@ const App: React.FC = () => {
           <Box sx={{ width: "100%", mb: 3 }}>
             <Box
               sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                mb: 0.5,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 0.5,
               }}>
               <Typography variant="body2" color="text.secondary">
-                {completedTasks} of {totalTasks} tasks completed
+          {completedTasks} of {totalTasks} tasks completed
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {Math.round(animatedProgress)}%
+          {Math.round(animatedProgress)}%
               </Typography>
             </Box>
 
@@ -199,18 +197,18 @@ const App: React.FC = () => {
               variant="determinate"
               value={animatedProgress}
               sx={{
-                height: 8,
-                borderRadius: 4,
-                backgroundColor: "#e0e0e0",
-                "& .MuiLinearProgress-bar": {
-                  backgroundColor:
-                    animatedProgress < 40
-                      ? "#ef4444" // red
-                      : animatedProgress < 80
-                      ? "#facc15" // yellow
-                      : "#22c55e", // green
-                  transition: "all 0.3s ease",
-                },
+          height: 8,
+          borderRadius: 4,
+          backgroundColor: "#e0e0e0",
+          "& .MuiLinearProgress-bar": {
+            backgroundColor:
+              animatedProgress < 40
+                ? "#ef4444" // red
+                : animatedProgress < 80
+                ? "#facc15" // yellow
+                : "#22c55e", // green
+            transition: "all 0.3s ease",
+          },
               }}
             />
           </Box>
@@ -227,8 +225,13 @@ const App: React.FC = () => {
           {/* Task List */}
           <TaskList
             tasks={sortedTasks}
-            toggleTask={(id) => dispatch({ type: "TOGGLE_TASK", id })}
-            deleteTask={(id) => dispatch({ type: "DELETE_TASK", id })}
+            // use firebase query helpers: find the task locally then call toggleComplete which uses updateTask + reload
+            toggleTask={(id) => {
+              const task = tasks.find((t) => t.id === id);
+              if (task) toggleComplete(task);
+            }}
+            // use firebase delete helper
+            deleteTask={(id) => handleDelete(id)}
           />
         </div>
       </div>
