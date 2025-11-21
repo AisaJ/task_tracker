@@ -1,45 +1,38 @@
-import React, { useEffect, useReducer, useState, } from "react";
+import React, { useEffect, useState, } from "react";
 import TaskForm from "./components/TaskForm";
 import TaskList from "./components/TaskList";
-import type { Task, Action } from "./types";
 import { Button, Typography, FormControl, InputLabel, MenuItem,Select, Box, LinearProgress } from "@mui/material";
-import { useNavigate } from "react-router-dom";
 import LogoutButton from "./components/LogoutButton";
-import { db } from "./firebase/firebaseConfig";
-import { collection, getDocs } from "firebase/firestore";
 import { getTasks, updateTask, deleteTask } from "./firebase/taskQueries";
 
 
-const reducer = (state: Task[], action: Action): Task[] => {
-  switch (action.type) {
-    case "ADD_TASK":
-          return [
-            ...state,
-            { id: Date.now(), task: action.title, completed: false, date: action.dueDate || "" },
-          ];
-    case "TOGGLE_TASK":
-      return state.map((t) =>
-        t.id === action.id ? { ...t, completed: !t.completed } : t
-      );
-    case "DELETE_TASK":
-      return state.filter((t) => t.id !== action.id);
-    case "LOAD_TASKS":
-      return action.tasks;
-    default:
-      return state;
-  }
-};
+// const reducer = (state: Task[], action: Action): Task[] => {
+//   switch (action.type) {
+//     case "ADD_TASK":
+//           return [
+//             ...state,
+//             { id: Date.now(), task: action.title, completed: false, date: action.dueDate || "" },
+//           ];
+//     case "TOGGLE_TASK":
+//       return state.map((t) =>
+//         t.id === action.id ? { ...t, completed: !t.completed } : t
+//       );
+//     case "DELETE_TASK":
+//       return state.filter((t) => t.id !== action.id);
+//     case "LOAD_TASKS":
+//       return action.tasks;
+//     default:
+//       return state;
+//   }
+// };
 
 
 
 const App: React.FC = () => {
-  // const [tasks, dispatch] = useReducer(reducer, []);
+
   const [filter, setFilter] = useState<"all" | "active" | "completed">("all");
   const [darkMode, setDarkMode] = useState<boolean>(false);
   const [sortOrder, setSortOrder] = useState<"none" | "asc" | "desc">("none");
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string>("");
   const[tasks, setTasks] = useState<any[]>([]);
 
 
@@ -130,12 +123,12 @@ const App: React.FC = () => {
             </div>
             <Typography variant="h5" className="text-xl text-amber-700 dark:text-amber-200">Task Tracker Dashboard</Typography>
 
-            {/* <button
+            <button
               onClick={() => setDarkMode(!darkMode)}
               className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-3 py-1 rounded-md hover:opacity-80"
             >
               {darkMode ? "☀️ Light" : "🌙 Dark"}
-            </button> */}
+            </button>
           </div>
 
           {/* Task Form */}

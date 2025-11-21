@@ -12,8 +12,6 @@ interface TaskItemProps {
 
 const TaskItem: React.FC<TaskItemProps> = ({ task, toggleTask, deleteTask }) => {
     const isOverdue = task.date && !task.completed && dayjs(task.date).isBefore(dayjs(), "day");
-
-    const formattedDate = task.date ? dayjs(task.date).format("MMM D, YYYY") : "";
    
       return (
         <div className="flex justify-between items-center bg-white p-2 mb-2 rounded-md shadow-sm border border-gray-200 dark:bg-gray-400 dark:border-gray-200">

@@ -1,4 +1,3 @@
-// src/firebase/taskQueries.ts
 import {
   collection,
   addDoc,
@@ -19,19 +18,30 @@ export const addTask = async (task: {
   task: string;
   completed: boolean;
   date: string;
-}) => {
-  return await addDoc(tasksCollection, task);
-};
+}) => 
+  {
+    try {
+      return await addDoc(tasksCollection, task);
+    }catch (error) {
+      console.error("Error adding task: ", error);
+    }
+  }
 
 // ----------------------
 // Fetch All Tasks
 // ----------------------
 export const getTasks = async () => {
-  const snapshot = await getDocs(tasksCollection);
-  return snapshot.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
-  }));
+  try {
+     const snapshot = await getDocs(tasksCollection);
+      return snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+  }catch (error) {
+    console.error("Error fetching tasks: ", error);
+    return [];
+  }
+ 
 };
 
 // ----------------------
