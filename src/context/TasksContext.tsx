@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from "react";
+import  { createContext, useState, useContext, useEffect } from "react";
 import type { ReactNode } from "react";
 import { collection, onSnapshot } from "firebase/firestore";
 
@@ -17,7 +17,7 @@ const TasksContext = createContext<TasksContextValue | undefined>(undefined);
 
 export const TasksProvider = ({ children }: { children: ReactNode }) => {
   const [tasks, setTasks] = useState<Task[]>([]);
-   const [error, setError] = useState<string | null>(null);
+   const [, setError] = useState<string | null>(null);
 
   useEffect(() => {
     try{
